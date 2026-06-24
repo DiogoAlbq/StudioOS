@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { DashboardLayout } from './layout/DashboardLayout';
 import { GalleryManager } from './views/GalleryManager';
 import { DashboardView } from './views/DashboardView';

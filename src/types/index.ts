@@ -108,7 +108,7 @@ export interface SystemState {
   exchangeRate: number;
   lastBackupTimestamp: number | null;
   isServerRunning: boolean;
-  pricing?: {
+  pricing: {
     halfBody: number;
     fullBody: number;
     icon: number;

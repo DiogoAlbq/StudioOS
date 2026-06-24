@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Save, Database, HardDrive, Shield, FileCode2, Clock, ImagePlus, Key, Eye, EyeOff, Activity, CheckCircle2, XCircle, RefreshCw, GitBranch, Loader2, ExternalLink, AlertCircle, Globe, Trash2 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { usePortfolioStore } from '../store/usePortfolioStore';
@@ -178,7 +178,7 @@ export function SettingsView() {
   };
 
   const generateYaml = () => {
-    const repo = settings.githubRepo || 'meu-portfolio';
+    const repoName = settings.githubRepo || 'meu-portfolio';
     const yaml = `name: Deploy Portfolio
 on:
   push:
@@ -192,7 +192,7 @@ jobs:
     - name: Use Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20.x'
+        node-version: '24.x'
         cache: 'npm'
     - run: npm ci
     - run: npm run build
@@ -203,7 +203,7 @@ jobs:
         publish_dir: ./dist
 `;
     setYamlConfig(yaml);
-    addToast({ type: 'success', message: 'YAML gerado.' });
+    addToast({ type: 'success', message: `YAML gerado para ${repoName}.` });
   };
 
   const getStatusColor = (status: string) => {
@@ -364,7 +364,7 @@ jobs:
         <div className="flex items-center gap-4">
           <div className="flex items-center text-xs text-zinc-500 bg-zinc-900/50 px-3 py-1.5 rounded-full border border-zinc-800">
             <Clock size={12} className="mr-1.5" />
-            Ultimo salvamento: {new Date(systemState.lastBackupTimestamp).toLocaleTimeString()}
+            Ultimo salvamento: {systemState.lastBackupTimestamp ? new Date(systemState.lastBackupTimestamp).toLocaleTimeString() : 'Nunca'}
           </div>
           <Button variant="primary" onClick={handleSave}>
             <Save size={16} className="mr-2" />

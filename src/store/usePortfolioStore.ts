@@ -125,7 +125,7 @@ export const usePortfolioStore = create<PortfolioStore>((set) => ({
   updatePricing: (pricing: Partial<NonNullable<SystemState['pricing']>>) => set((state) => ({
     systemState: {
       ...state.systemState,
-      pricing: { ...state.systemState.pricing!, ...pricing }
+      pricing: { ...(state.systemState.pricing || { halfBody: 0, fullBody: 0, icon: 0, custom: 0 }), ...pricing }
     }
   })),
   updateTos: (tosData) => set((state) => ({

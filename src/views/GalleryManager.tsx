@@ -128,7 +128,7 @@ const PortfolioCard: React.FC<{ item: PortfolioItem, category: CategoryKey, onEd
 }
 
 export function GalleryManager() {
-  const { activeCategory, setActiveCategory, artItems, videoItems, nsfwItems, heroBgImages, socialItems, addItem, addToast, deleteItems, moveItemsToCategory, updateItem, undo, history, syncFromSite } = usePortfolioStore();
+  const { activeCategory, setActiveCategory, artItems, videoItems, nsfwItems, heroBgImages, socialItems, addItem, addToast, deleteItems, moveItemsToCategory, updateItem, undo, syncFromSite } = usePortfolioStore();
   const settings = useSettingsStore();
   const [editingItem, setEditingItem] = useState<PortfolioItem | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);

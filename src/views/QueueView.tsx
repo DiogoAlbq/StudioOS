@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Reorder } from 'motion/react';
 import { usePortfolioStore } from '../store/usePortfolioStore';
-import { Plus, Settings, Trash2, ListOrdered, ChevronRight, Activity, AlertCircle, CheckSquare, Square } from 'lucide-react';
+import { Plus, Settings, Trash2, ListOrdered, Activity, CheckSquare, Square } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { ask } from '@tauri-apps/plugin-dialog';
 
@@ -81,8 +81,8 @@ export function QueueView() {
     }
   };
 
-  const handleBulkStatus = (status: QueueStatus) => {
-    updateQueueItems(Array.from(selectedItems), { status });
+  const handleBulkStatus = (status: string) => {
+    updateQueueItems(Array.from(selectedItems), { status: status as QueueStatus });
     setSelectedItems(new Set());
   };
 

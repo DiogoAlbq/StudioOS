@@ -13,10 +13,6 @@ export async function initLogger(): Promise<void> {
   }
 }
 
-function getTimestamp(): string {
-  return new Date().toISOString();
-}
-
 export function getSessionId(): string | null {
   return sessionId;
 }

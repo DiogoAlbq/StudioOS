@@ -1,11 +1,11 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { RefreshCw, Search, ExternalLink, Image as ImageIcon, Video, CloudOff, Loader2 } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { RefreshCw, Search, Image as ImageIcon, Video, CloudOff, Loader2 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { usePortfolioStore } from '../store/usePortfolioStore';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { triggerWorkflow } from '../lib/github';
 import { getSiteSyncStatus, onSiteSyncStatusChange, forceSyncNow } from '../lib/siteSync';
-import { ViewKey, CategoryKey, PortfolioItem } from '../types';
+import { CategoryKey, PortfolioItem } from '../types';
 
 function NavLink({ label, active, onClick }: { label: string, active?: boolean, onClick: () => void }) {
   return (
@@ -155,7 +155,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                           <div className="flex flex-col flex-1 min-w-0">
                             <span className="text-xs text-white truncate">{item.mediaUrl || item.url || `Slot Vazio #${item.index}`}</span>
                             <span className="text-[10px] text-zinc-500 flex items-center">
-                              <span className={`w-1.5 h-1.5 rounded-full mr-1.5 bg-zinc-600 ${item.color.replace('bg-', 'bg-').split('/')[0]}`} />
+                              <span className={`w-1.5 h-1.5 rounded-full mr-1.5 bg-zinc-600 ${(item.color || 'bg-zinc-600').replace('bg-', 'bg-').split('/')[0]}`} />
                               {item.categoryLabel}
                             </span>
                           </div>

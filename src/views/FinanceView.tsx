@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { DollarSign, ArrowRightLeft, TrendingUp, Download, PieChart } from 'lucide-react';
 import { usePortfolioStore } from '../store/usePortfolioStore';
 import { Button } from '../components/ui/Button';

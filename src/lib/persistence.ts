@@ -122,7 +122,7 @@ export async function saveState(state: {
   }
 }
 
-export async function exportState(format: 'json' = 'json'): Promise<string> {
+export async function exportState(): Promise<string> {
   const state = await loadState();
   return JSON.stringify(state, null, 2);
 }
