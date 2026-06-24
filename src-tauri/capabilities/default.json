@@ -9,6 +9,8 @@
     "dialog:default",
     "shell:default",
     "http:default",
+    "updater:default",
+    "process:default",
     {
       "identifier": "fs:scope",
       "allow": [

@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
-import { RefreshCw, Search, Image as ImageIcon, Video, CloudOff, Loader2 } from 'lucide-react';
+import { check } from '@tauri-apps/plugin-updater';
+import { RefreshCw, Search, Image as ImageIcon, Video, CloudOff, Loader2, ArrowUpCircle } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { usePortfolioStore } from '../store/usePortfolioStore';
 import { useSettingsStore } from '../store/useSettingsStore';
@@ -27,6 +28,11 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [syncStatus, setSyncStatus] = useState(getSiteSyncStatus());
+  const [hasUpdate, setHasUpdate] = useState(false);
+
+  useEffect(() => {
+    check().then(r => { if (r?.available) setHasUpdate(true); }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     return onSiteSyncStatusChange(setSyncStatus);
@@ -101,6 +107,16 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               </div>
               <span className="font-semibold text-white tracking-tight">StudioOS</span>
               <span className="px-1.5 py-0.5 rounded-md bg-zinc-800 text-[10px] font-mono text-zinc-400 ml-2">v2</span>
+              {hasUpdate && (
+                <button
+                  onClick={() => setActiveView("settings")}
+                  className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-[10px] font-mono text-emerald-400 ml-1 hover:bg-emerald-500/20 transition-colors"
+                  title="Update disponivel"
+                >
+                  <ArrowUpCircle size={10} />
+                  <span>UPDATE</span>
+                </button>
+              )}
             </div>
 
             {/* Main Nav */}
@@ -219,3 +235,5 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+
+

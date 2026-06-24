@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { UpdateChecker } from '../components/ui/UpdateChecker';
 import { Save, Database, HardDrive, Shield, FileCode2, Clock, ImagePlus, Key, Eye, EyeOff, Activity, CheckCircle2, XCircle, RefreshCw, GitBranch, Loader2, ExternalLink, AlertCircle, Globe, Trash2 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { usePortfolioStore } from '../store/usePortfolioStore';
@@ -906,7 +907,20 @@ jobs:
             </Button>
           </div>
         </section>
+
+        {/* About & Updates */}
+        <section className="bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden">
+          <div className="px-6 py-4 border-b border-zinc-800 bg-zinc-900/80 flex items-center gap-3">
+            <RefreshCw size={18} className="text-zinc-400" />
+            <h3 className="font-medium text-white">Sobre & Atualizacoes</h3>
+          </div>
+          <div className="p-6">
+            <UpdateChecker />
+          </div>
+        </section>
       </div>
     </div>
   );
 }
+
+
