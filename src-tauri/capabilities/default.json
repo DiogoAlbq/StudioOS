@@ -1,0 +1,42 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "enables the default permissions",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "fs:default",
+    "dialog:default",
+    "shell:default",
+    "http:default",
+    {
+      "identifier": "fs:scope",
+      "allow": [
+        { "path": "$APPDATA/**" },
+        { "path": "$DOWNLOAD/**" },
+        { "path": "$DESKTOP/**" },
+        { "path": "$DOCUMENT/**" },
+        { "path": "$HOME/**" }
+      ]
+    },
+    {
+      "identifier": "http:allow-fetch",
+      "allow": [
+        { "url": "https://api.github.com/**" },
+        { "url": "https://github.com/**" }
+      ]
+    },
+    {
+      "identifier": "http:allow-fetch-cancel",
+      "allow": [
+        { "url": "https://api.github.com/**" }
+      ]
+    },
+    {
+      "identifier": "http:allow-fetch-read-body",
+      "allow": [
+        { "url": "https://api.github.com/**" }
+      ]
+    }
+  ]
+}
