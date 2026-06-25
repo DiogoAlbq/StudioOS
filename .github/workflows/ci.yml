@@ -7,6 +7,10 @@ on:
   pull_request:
     branches: [main]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
   TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
@@ -20,26 +24,15 @@ jobs:
         node-version: [24]
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-
-      - name: Install frontend dependencies
-        run: npm ci
-
-      - name: Type check
-        run: npm run typecheck
-
-      - name: Build frontend
-        run: npm run build
-
-      - name: Upload frontend build
-        uses: actions/upload-artifact@v4
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
         with:
           name: frontend-dist
           path: dist/
@@ -47,33 +40,34 @@ jobs:
 
   tauri:
     needs: frontend
-    permissions:
-      contents: write
     strategy:
       fail-fast: false
       matrix:
         include:
           - platform: ubuntu-22.04
             args: ''
+            artifact: linux
+            target-dir: src-tauri/target/release/bundle
           - platform: windows-latest
             args: '--target x86_64-pc-windows-msvc'
+            artifact: windows
+            target-dir: src-tauri/target/x86_64-pc-windows-msvc/release/bundle
           - platform: macos-latest
             args: '--target universal-apple-darwin'
+            artifact: macos
+            target-dir: src-tauri/target/universal-apple-darwin/release/bundle
 
     runs-on: ${{ matrix.platform }}
+    permissions:
+      contents: write
     
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: 'npm'
-
-      - name: Install frontend dependencies
-        run: npm ci
+      - run: npm ci
 
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
@@ -81,29 +75,132 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: 1.88.0
           targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
-      - name: Rust cache
-        uses: swatinem/rust-cache@v2
+      - uses: swatinem/rust-cache@v2
         with:
           workspaces: './src-tauri -> target'
 
-      - name: Build and upload to release
+      - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0.6.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
-          tagName: v__VERSION__
-          releaseName: 'StudioOS v__VERSION__'
-          releaseBody: 'See the assets below to download the installer for your platform.'
-          releaseDraft: true
-          prerelease: false
-          includeUpdaterJson: true
-          updaterJsonPreferNsis: true
           args: ${{ matrix.args }}
+
+      - name: Upload bundles
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundles-${{ matrix.artifact }}
+          path: |
+            ${{ matrix.target-dir }}/deb/*.deb
+            ${{ matrix.target-dir }}/deb/*.deb.sig
+            ${{ matrix.target-dir }}/rpm/*.rpm
+            ${{ matrix.target-dir }}/rpm/*.rpm.sig
+            ${{ matrix.target-dir }}/appimage/*.AppImage*
+            ${{ matrix.target-dir }}/nsis/*.exe
+            ${{ matrix.target-dir }}/nsis/*.exe.sig
+            ${{ matrix.target-dir }}/nsis/*.nsis.zip
+            ${{ matrix.target-dir }}/nsis/*.nsis.zip.sig
+            ${{ matrix.target-dir }}/msi/*.msi
+            ${{ matrix.target-dir }}/msi/*.msi.sig
+            ${{ matrix.target-dir }}/msi/*.msi.zip
+            ${{ matrix.target-dir }}/msi/*.msi.zip.sig
+            ${{ matrix.target-dir }}/dmg/*.dmg
+            ${{ matrix.target-dir }}/dmg/*.dmg.sig
+            ${{ matrix.target-dir }}/macos/*.app
+            ${{ matrix.target-dir }}/macos/*.app.tar.gz
+            ${{ matrix.target-dir }}/macos/*.app.tar.gz.sig
+          if-no-files-found: ignore
+          retention-days: 7
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: tauri
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all bundles
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Generate latest.json
+        run: python3 << 'PYEOF'
+import json, os, glob
+from datetime import datetime, timezone
+
+ref = os.environ['GITHUB_REF_NAME']
+version = ref.lstrip('v')
+timestamp = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+repo = os.environ.get('GITHUB_REPOSITORY', 'DiogoAlbq/StudioOS')
+download_base = f'https://github.com/{repo}/releases/download/{ref}'
+
+manifest = {
+    'version': version,
+    'notes': f'Release {ref}',
+    'pub_date': timestamp,
+    'platforms': {}
+}
+
+def find_file(pattern):
+    matches = glob.glob(f'artifacts/**/{pattern}', recursive=True)
+    return matches[0] if matches else None
+
+platforms = [
+    ('linux-x86_64',  'StudioOS_*_amd64.AppImage'),
+    ('windows-x86_64', 'StudioOS_*_x64-setup.exe'),
+    ('darwin-x86_64',  'StudioOS_*_universal.dmg'),
+    ('darwin-aarch64', 'StudioOS_universal.app.tar.gz'),
+]
+
+for platform, pattern in platforms:
+    bundle = find_file(pattern)
+    if not bundle:
+        if platform == 'windows-x86_64':
+            bundle = find_file('StudioOS_*_x64_en-US.msi')
+        elif platform == 'darwin-x86_64':
+            bundle = find_file('StudioOS_universal.app.tar.gz')
+        elif platform == 'darwin-aarch64':
+            bundle = find_file('StudioOS_*_universal.dmg')
+
+    if bundle:
+        sig = find_file(os.path.basename(bundle) + '.sig')
+        if sig:
+            with open(sig) as f:
+                signature = f.read()
+            manifest['platforms'][platform] = {
+                'signature': signature,
+                'url': f'{download_base}/{os.path.basename(bundle)}'
+            }
+            print(f'  {platform}: {os.path.basename(bundle)} (signed)')
+        else:
+            print(f'  {platform}: {os.path.basename(bundle)} (NO SIGNATURE)')
+    else:
+        print(f'  {platform}: SKIPPED (not found)')
+
+with open('latest.json', 'w') as f:
+    json.dump(manifest, f, indent=2, ensure_ascii=False)
+
+print(f'\nGenerated latest.json with {len(manifest["platforms"])} platform(s)')
+print(json.dumps(manifest, indent=2))
+PYEOF
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          generate_release_notes: true
+          files: |
+            latest.json
+            artifacts/**/*
+          fail_on_unmatched_files: false
