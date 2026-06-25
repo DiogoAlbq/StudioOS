@@ -103,10 +103,6 @@ jobs:
             ${{ matrix.target-dir }}/rpm/*.rpm
             ${{ matrix.target-dir }}/rpm/*.rpm.sig
             ${{ matrix.target-dir }}/appimage/*.AppImage*
-            ${{ matrix.target-dir }}/nsis/*.exe
-            ${{ matrix.target-dir }}/nsis/*.exe.sig
-            ${{ matrix.target-dir }}/nsis/*.nsis.zip
-            ${{ matrix.target-dir }}/nsis/*.nsis.zip.sig
             ${{ matrix.target-dir }}/msi/*.msi
             ${{ matrix.target-dir }}/msi/*.msi.sig
             ${{ matrix.target-dir }}/msi/*.msi.zip
@@ -158,7 +154,7 @@ def find_file(pattern):
 
 platforms = [
     ('linux-x86_64',  'StudioOS_*_amd64.AppImage'),
-    ('windows-x86_64', 'StudioOS_*_x64-setup.exe'),
+    ('windows-x86_64', 'StudioOS_*.msi'),
     ('darwin-x86_64',  'StudioOS_*_universal.dmg'),
     ('darwin-aarch64', 'StudioOS_universal.app.tar.gz'),
 ]
@@ -166,9 +162,7 @@ platforms = [
 for platform, pattern in platforms:
     bundle = find_file(pattern)
     if not bundle:
-        if platform == 'windows-x86_64':
-            bundle = find_file('StudioOS_*_x64_en-US.msi')
-        elif platform == 'darwin-x86_64':
+        if platform == 'darwin-x86_64':
             bundle = find_file('StudioOS_universal.app.tar.gz')
         elif platform == 'darwin-aarch64':
             bundle = find_file('StudioOS_*_universal.dmg')
