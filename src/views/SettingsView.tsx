@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { UpdateChecker } from '../components/ui/UpdateChecker';
-import { Save, Database, HardDrive, Shield, FileCode2, Clock, ImagePlus, Key, Eye, EyeOff, Activity, CheckCircle2, XCircle, RefreshCw, GitBranch, Loader2, ExternalLink, AlertCircle, Globe, Trash2 } from 'lucide-react';
+import { Save, Database, HardDrive, Shield, FileCode2, Clock, ImagePlus, Key, Eye, EyeOff, Activity, CheckCircle2, XCircle, RefreshCw, GitBranch, Loader2, ExternalLink, AlertCircle, Globe, Trash2, FolderOpen } from 'lucide-react';
 import { Button } from '../components/ui/Button';
+import { Badge } from '../components/ui/Badge';
 import { usePortfolioStore } from '../store/usePortfolioStore';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { save as dialogSave, ask } from '@tauri-apps/plugin-dialog';
@@ -9,6 +10,8 @@ import { writeTextFile } from '@tauri-apps/plugin-fs';
 import { saveState } from '../lib/persistence';
 import { triggerWorkflow, pushSiteData } from '../lib/github';
 import { logger } from '../lib/logger';
+import { invoke } from '@tauri-apps/api/core';
+import type { BackupMetadata, StorageInfo } from '../types';
 
 export function SettingsView() {
   const { systemState, addToast } = usePortfolioStore();
@@ -25,6 +28,10 @@ export function SettingsView() {
   const [deployBranch, setDeployBranch] = useState('main');
   const [isSiteDeploying, setIsSiteDeploying] = useState(false);
   const [siteRepo, setSiteRepo] = useState('');
+  const [storageInfo, setStorageInfo] = useState<StorageInfo | null>(null);
+  const [backups, setBackups] = useState<BackupMetadata[]>([]);
+  const [loadingBackups, setLoadingBackups] = useState(false);
+  const [restoringId, setRestoringId] = useState<string | null>(null);
 
   useEffect(() => {
     settings.loadSettings();
@@ -128,33 +135,85 @@ export function SettingsView() {
 
   const handleBackup = async () => {
     addToast({ type: 'info', message: 'Iniciando backup local...' });
-    const state = usePortfolioStore.getState();
-    const backupData = JSON.stringify({
-      artItems: state.artItems,
-      videoItems: state.videoItems,
-      nsfwItems: state.nsfwItems,
-      heroBgImages: state.heroBgImages,
-      socialItems: state.socialItems,
-      queueItems: state.queueItems,
-    }, null, 2);
-
-    const filePath = await dialogSave({
-      defaultPath: `portfolio_backup_${new Date().toISOString().split('T')[0]}.json`,
-      filters: [{ name: 'JSON', extensions: ['json'] }],
-    });
-    if (filePath) {
-      await writeTextFile(filePath, backupData);
-      addToast({ type: 'success', message: 'Backup concluido.' });
+    try {
+      await invoke('create_backup_cmd', { description: `Backup manual ${new Date().toLocaleDateString()}` });
+      addToast({ type: 'success', message: 'Backup criado com sucesso.' });
+      loadBackupData();
+    } catch (err) {
+      addToast({ type: 'error', message: `Falha no backup: ${err}` });
     }
   };
 
-  const handleCompress = () => {
+  const loadBackupData = async () => {
+    try {
+      setLoadingBackups(true);
+      const [info, backupList] = await Promise.all([
+        invoke<StorageInfo>('get_storage_info_cmd'),
+        invoke<BackupMetadata[]>('list_backups_cmd'),
+      ]);
+      setStorageInfo(info);
+      setBackups(backupList);
+    } catch (err) {
+      console.error('Failed to load backup data:', err);
+    } finally {
+      setLoadingBackups(false);
+    }
+  };
+
+  const handleRestoreBackup = async (backupId: string) => {
+    if (!await ask('Restaurar este backup? Os dados atuais serao substituidos.', { title: 'Restaurar Backup' })) return;
+    setRestoringId(backupId);
+    try {
+      const state = await invoke<{ artItems: unknown[]; videoItems: unknown[]; nsfwItems: unknown[]; heroBgImages: unknown[]; socialItems: unknown[]; queueItems: unknown[]; systemState: unknown }>('restore_backup_cmd', { backupId });
+      usePortfolioStore.getState().restoreBackup(state);
+      addToast({ type: 'success', message: 'Backup restaurado com sucesso.' });
+      loadBackupData();
+    } catch (err) {
+      addToast({ type: 'error', message: `Falha ao restaurar: ${err}` });
+    } finally {
+      setRestoringId(null);
+    }
+  };
+
+  const handleDeleteBackup = async (backupId: string) => {
+    if (!await ask('Deletar este backup permanentemente?', { title: 'Deletar Backup' })) return;
+    try {
+      await invoke('delete_backup_cmd', { backupId });
+      addToast({ type: 'success', message: 'Backup deletado.' });
+      loadBackupData();
+    } catch (err) {
+      addToast({ type: 'error', message: `Falha ao deletar: ${err}` });
+    }
+  };
+
+  useEffect(() => {
+    loadBackupData();
+  }, []);
+
+  const handleCompress = async () => {
     setIsCompressing(true);
     addToast({ type: 'info', message: 'Iniciando compressao de imagens...' });
-    setTimeout(() => {
+    try {
+      const items = usePortfolioStore.getState().artItems.filter(i => i.mediaUrl);
+      const paths = items.map(i => i.mediaUrl!).filter(Boolean);
+      if (paths.length === 0) {
+        addToast({ type: 'info', message: 'Nenhuma imagem para comprimir.' });
+        setIsCompressing(false);
+        return;
+      }
+      const results = await invoke<{ originalPath: string; compressedSize: number; compressionRatio: number }[]>('batch_compress_images', {
+        inputPaths: paths.slice(0, 10),
+        quality: 80,
+        maxWidth: 1920,
+        format: 'webp',
+      });
+      const totalSaved = results.reduce((s, r) => s + r.compressionRatio, 0);
+      addToast({ type: 'success', message: `${results.length} imagens otimizadas para WebP. Economia: ${totalSaved.toFixed(0)}%` });
+    } catch (err) {
+      addToast({ type: 'error', message: `Falha na compressao: ${err}` });
+    } finally {
       setIsCompressing(false);
-      addToast({ type: 'success', message: 'Imagens otimizadas para WebP.' });
-    }, 2500);
+    }
   };
 
   const handleGenerateSsh = async () => {
@@ -857,6 +916,36 @@ jobs:
           </div>
         </section>
 
+        {/* Language */}
+        <section className="bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden">
+          <div className="px-6 py-4 border-b border-zinc-800 bg-zinc-900/80 flex items-center gap-3">
+            <Globe size={18} className="text-zinc-400" />
+            <h3 className="font-medium text-white">Idioma / Language</h3>
+          </div>
+          <div className="p-6 flex items-center gap-4">
+            <Button
+              variant={localStorage.getItem('studioos-lang') !== 'en' ? 'primary' : 'secondary'}
+              onClick={async () => {
+                const { setLanguage } = await import('../lib/i18n');
+                setLanguage('pt');
+                addToast({ type: 'success', message: 'Idioma alterado para Português' });
+              }}
+            >
+              Português
+            </Button>
+            <Button
+              variant={localStorage.getItem('studioos-lang') === 'en' ? 'primary' : 'secondary'}
+              onClick={async () => {
+                const { setLanguage } = await import('../lib/i18n');
+                setLanguage('en');
+                addToast({ type: 'success', message: 'Language changed to English' });
+              }}
+            >
+              English
+            </Button>
+          </div>
+        </section>
+
         {/* SSH Keys */}
         <section className="bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden">
           <div className="px-6 py-4 border-b border-zinc-800 bg-zinc-900/80 flex items-center gap-3">
@@ -897,14 +986,76 @@ jobs:
             <HardDrive size={18} className="text-red-400" />
             <h3 className="font-medium text-red-400">Gerenciamento de Dados</h3>
           </div>
-          <div className="p-6 flex items-center justify-between">
-            <div>
-              <h4 className="text-sm font-medium text-white">Backup Local</h4>
-              <p className="text-xs text-zinc-500 mt-1">Copia de seguranca dos dados.</p>
+          <div className="p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-sm font-medium text-white">Backup Local</h4>
+                <p className="text-xs text-zinc-500 mt-1">Copia de seguranca dos dados.</p>
+              </div>
+              <Button variant="secondary" onClick={handleBackup}>
+                Fazer Backup
+              </Button>
             </div>
-            <Button variant="secondary" onClick={handleBackup}>
-              Fazer Backup
-            </Button>
+
+            {storageInfo && (
+              <div className="grid grid-cols-4 gap-3 pt-2">
+                <div className="bg-zinc-800/50 rounded-lg p-3 text-center">
+                  <p className="text-lg font-bold text-white">{storageInfo.backupsCount}</p>
+                  <p className="text-[10px] text-zinc-500">Backups</p>
+                </div>
+                <div className="bg-zinc-800/50 rounded-lg p-3 text-center">
+                  <p className="text-lg font-bold text-white">{(storageInfo.backupsTotalSize / 1024).toFixed(0)}KB</p>
+                  <p className="text-[10px] text-zinc-500">Total</p>
+                </div>
+                <div className="bg-zinc-800/50 rounded-lg p-3 text-center">
+                  <p className="text-lg font-bold text-white">{(storageInfo.stateSizeBytes / 1024).toFixed(0)}KB</p>
+                  <p className="text-[10px] text-zinc-500">Estado</p>
+                </div>
+                <div className="bg-zinc-800/50 rounded-lg p-3 text-center">
+                  <p className="text-lg font-bold text-white truncate text-xs">{storageInfo.dataDir.split('\\').pop()}</p>
+                  <p className="text-[10px] text-zinc-500">Diretorio</p>
+                </div>
+              </div>
+            )}
+
+            {loadingBackups ? (
+              <div className="text-center py-4 text-zinc-500 text-sm">Carregando backups...</div>
+            ) : backups.length > 0 ? (
+              <div className="space-y-2">
+                <h5 className="text-sm font-medium text-zinc-400">Backups Disponiveis</h5>
+                {backups.map((b) => (
+                  <div key={b.id} className="flex items-center justify-between p-3 bg-zinc-800/30 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <Clock size={14} className="text-zinc-500" />
+                      <div>
+                        <p className="text-sm text-white">
+                          {new Date(b.createdAt).toLocaleDateString()} - {new Date(b.createdAt).toLocaleTimeString()}
+                        </p>
+                        <p className="text-xs text-zinc-500">
+                          {(b.sizeBytes / 1024).toFixed(1)}KB &middot; {b.itemCount} itens
+                          {b.description && ` - ${b.description}`}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => handleRestoreBackup(b.id)}
+                        isLoading={restoringId === b.id}
+                      >
+                        Restaurar
+                      </Button>
+                      <Button variant="danger" size="sm" onClick={() => handleDeleteBackup(b.id)}>
+                        <Trash2 size={14} />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-zinc-500 text-sm text-center py-2">Nenhum backup encontrado</p>
+            )}
           </div>
         </section>
 

@@ -1,5 +1,6 @@
 export type CategoryKey = 'hero' | 'social' | 'art' | 'video' | 'nsfw';
-export type ViewKey = 'dashboard' | 'galerias' | 'cambio' | 'settings' | 'queue';
+export type ViewKey = 'dashboard' | 'galerias' | 'cambio' | 'settings' | 'queue' | 'clients' | 'logs';
+export type Language = 'pt' | 'en';
 
 export type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error';
 export type LogSource = 'frontend' | 'backend' | 'tauri' | 'plugin';
@@ -116,4 +117,55 @@ export interface SystemState {
   };
   tosTemplate?: 'standard' | 'strict' | 'relaxed' | 'custom';
   customTosText?: string;
+}
+
+export interface Client {
+  id: string;
+  name: string;
+  email?: string;
+  discord?: string;
+  whatsapp?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  totalCommissions: number;
+  totalSpentUsd: number;
+}
+
+export interface ClientCommission {
+  id: string;
+  clientId: string;
+  reqId: string;
+  artType: string;
+  status: string;
+  priority: string;
+  priceUsd?: number;
+  stageName?: string;
+  notes?: string;
+  createdAt: string;
+  completedAt?: string;
+}
+
+export interface BackupMetadata {
+  id: string;
+  createdAt: string;
+  sizeBytes: number;
+  itemCount: number;
+  description?: string;
+}
+
+export interface StorageInfo {
+  stateSizeBytes: number;
+  settingsSizeBytes: number;
+  backupsCount: number;
+  backupsTotalSize: number;
+  dataDir: string;
+}
+
+export interface LogStats {
+  total: number;
+  byLevel: Record<string, number>;
+  bySource: Record<string, number>;
+  oldest?: string;
+  newest?: string;
 }

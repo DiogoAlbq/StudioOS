@@ -49,6 +49,18 @@ pub fn run() {
             commands::github::github_enable_pages,
             commands::github::github_push_site_data,
             commands::github::github_get_repo_default_branch,
+            // Clients
+            commands::clients::create_client_cmd,
+            commands::clients::list_clients_cmd,
+            commands::clients::get_client_cmd,
+            commands::clients::update_client_cmd,
+            commands::clients::delete_client_cmd,
+            commands::clients::add_client_commission_cmd,
+            commands::clients::get_client_commissions_cmd,
+            commands::clients::get_client_history_cmd,
+            // Image Compression
+            commands::image_compress::compress_image,
+            commands::image_compress::batch_compress_images,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

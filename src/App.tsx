@@ -5,6 +5,8 @@ import { DashboardView } from './views/DashboardView';
 import { FinanceView } from './views/FinanceView';
 import { SettingsView } from './views/SettingsView';
 import { QueueView } from './views/QueueView';
+import { ClientsView } from './views/ClientsView';
+import { LogsView } from './views/LogsView';
 import { ToastContainer } from './components/ui/ToastContainer';
 import { KeyboardShortcuts } from './components/KeyboardShortcuts';
 import { usePortfolioStore } from './store/usePortfolioStore';
@@ -94,6 +96,10 @@ export default function App() {
         return <SettingsView />;
       case 'queue':
         return <QueueView />;
+      case 'clients':
+        return <ClientsView />;
+      case 'logs':
+        return <LogsView />;
       default:
         return <DashboardView />;
     }

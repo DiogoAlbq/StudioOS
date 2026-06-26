@@ -1,11 +1,13 @@
 use anyhow::{Context, Result};
 use reqwest::Client;
+use reqwest_middleware::{ClientBuilder, ClientWithMiddleware};
+use reqwest_retry::{policies::ExponentialBackoff, RetryTransientMiddleware};
 use serde::{Deserialize, Serialize};
 use tauri::command;
 
 const GITHUB_API: &str = "https://api.github.com";
 
-fn build_client(pat: &str) -> Result<Client> {
+fn build_client(pat: &str) -> Result<ClientWithMiddleware> {
     let mut headers = reqwest::header::HeaderMap::new();
     headers.insert(
         "Authorization",
@@ -20,11 +22,19 @@ fn build_client(pat: &str) -> Result<Client> {
         reqwest::header::HeaderValue::from_static("2022-11-28"),
     );
 
-    Client::builder()
+    let retry_policy = ExponentialBackoff::builder()
+        .build_with_max_retries(3);
+
+    let client = Client::builder()
         .default_headers(headers)
-        .user_agent("StudioOS/0.1.0")
+        .user_agent("StudioOS/2.0.0")
+        .timeout(std::time::Duration::from_secs(30))
         .build()
-        .context("Failed to build HTTP client")
+        .context("Failed to build HTTP client")?;
+
+    Ok(ClientBuilder::new(client)
+        .with(RetryTransientMiddleware::new_with_policy(retry_policy))
+        .build())
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -235,7 +245,8 @@ pub async fn github_trigger_workflow(
             "{}/repos/{}/{}/actions/workflows/{}/dispatches",
             GITHUB_API, owner, repo, workflow_id
         ))
-        .json(&dispatch)
+        .body(serde_json::to_string(&dispatch).unwrap_or_default())
+        .header("Content-Type", "application/json")
         .send()
         .await
         .map_err(|e| format!("Failed to trigger workflow: {}", e))?;
@@ -357,7 +368,8 @@ pub async fn github_create_or_update_file(
             "{}/repos/{}/{}/contents/{}",
             GITHUB_API, owner, repo, path
         ))
-        .json(&body)
+        .body(serde_json::to_string(&body).unwrap_or_default())
+        .header("Content-Type", "application/json")
         .send()
         .await
         .map_err(|e| format!("Failed to create/update file: {}", e))?;
@@ -448,7 +460,8 @@ pub async fn github_enable_pages(
             "{}/repos/{}/{}/pages",
             GITHUB_API, owner, repo
         ))
-        .json(&body)
+        .body(serde_json::to_string(&body).unwrap_or_default())
+        .header("Content-Type", "application/json")
         .send()
         .await
         .map_err(|e| format!("Failed to enable pages: {}", e))?;
@@ -476,7 +489,7 @@ pub struct SiteDataPush {
 }
 
 async fn get_file_sha(
-    client: &Client,
+    client: &ClientWithMiddleware,
     _pat: &str,
     owner: &str,
     repo: &str,
@@ -500,7 +513,7 @@ async fn get_file_sha(
 }
 
 async fn create_or_update_file(
-    client: &Client,
+    client: &ClientWithMiddleware,
     pat: &str,
     owner: &str,
     repo: &str,
@@ -524,7 +537,8 @@ async fn create_or_update_file(
             "{}/repos/{}/{}/contents/{}",
             GITHUB_API, owner, repo, path
         ))
-        .json(&body)
+        .body(serde_json::to_string(&body).unwrap_or_default())
+        .header("Content-Type", "application/json")
         .send()
         .await
         .map_err(|e| format!("Failed to create/update {}: {}", path, e))?;

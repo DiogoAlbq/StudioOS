@@ -125,6 +125,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               <NavLink label="Galerias" active={activeView === 'galerias'} onClick={() => setActiveView('galerias')} />
               <NavLink label="Finanças" active={activeView === 'cambio'} onClick={() => setActiveView('cambio')} />
               <NavLink label="Queue" active={activeView === 'queue'} onClick={() => setActiveView('queue')} />
+              <NavLink label="Clientes" active={activeView === 'clients'} onClick={() => setActiveView('clients')} />
+              <NavLink label="Logs" active={activeView === 'logs'} onClick={() => setActiveView('logs')} />
               <NavLink label="Settings" active={activeView === 'settings'} onClick={() => setActiveView('settings')} />
             </nav>
           </div>
