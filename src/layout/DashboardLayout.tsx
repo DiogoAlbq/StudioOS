@@ -106,7 +106,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 <div className="w-2 h-2 bg-black rounded-full" />
               </div>
               <span className="font-semibold text-white tracking-tight">StudioOS</span>
-              <span className="px-1.5 py-0.5 rounded-md bg-zinc-800 text-[10px] font-mono text-zinc-400 ml-2">v2</span>
+              <span className="px-1.5 py-0.5 rounded-md bg-zinc-800 text-[10px] font-mono text-zinc-400 ml-2">v3</span>
               {hasUpdate && (
                 <button
                   onClick={() => setActiveView("settings")}
@@ -123,9 +123,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             <nav className="hidden md:flex items-center space-x-6">
               <NavLink label="Overview" active={activeView === 'dashboard'} onClick={() => setActiveView('dashboard')} />
               <NavLink label="Galerias" active={activeView === 'galerias'} onClick={() => setActiveView('galerias')} />
-              <NavLink label="Finanças" active={activeView === 'cambio'} onClick={() => setActiveView('cambio')} />
+              <NavLink label="Financas" active={activeView === 'cambio'} onClick={() => setActiveView('cambio')} />
               <NavLink label="Queue" active={activeView === 'queue'} onClick={() => setActiveView('queue')} />
               <NavLink label="Clientes" active={activeView === 'clients'} onClick={() => setActiveView('clients')} />
+              <NavLink label="Site" active={activeView === 'site'} onClick={() => setActiveView('site')} />
               <NavLink label="Logs" active={activeView === 'logs'} onClick={() => setActiveView('logs')} />
               <NavLink label="Settings" active={activeView === 'settings'} onClick={() => setActiveView('settings')} />
             </nav>

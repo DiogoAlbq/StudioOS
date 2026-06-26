@@ -1,5 +1,5 @@
 export type CategoryKey = 'hero' | 'social' | 'art' | 'video' | 'nsfw';
-export type ViewKey = 'dashboard' | 'galerias' | 'cambio' | 'settings' | 'queue' | 'clients' | 'logs';
+export type ViewKey = 'dashboard' | 'galerias' | 'cambio' | 'settings' | 'queue' | 'clients' | 'logs' | 'site';
 export type Language = 'pt' | 'en';
 
 export type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error';

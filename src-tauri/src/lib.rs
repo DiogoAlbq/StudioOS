@@ -61,6 +61,9 @@ pub fn run() {
             // Image Compression
             commands::image_compress::compress_image,
             commands::image_compress::batch_compress_images,
+            // Site Builder
+            commands::site::save_site_config,
+            commands::site::load_site_config,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

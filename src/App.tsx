@@ -7,6 +7,7 @@ import { SettingsView } from './views/SettingsView';
 import { QueueView } from './views/QueueView';
 import { ClientsView } from './views/ClientsView';
 import { LogsView } from './views/LogsView';
+import { SiteBuilderView } from './views/SiteBuilderView';
 import { ToastContainer } from './components/ui/ToastContainer';
 import { KeyboardShortcuts } from './components/KeyboardShortcuts';
 import { usePortfolioStore } from './store/usePortfolioStore';
@@ -100,6 +101,8 @@ export default function App() {
         return <ClientsView />;
       case 'logs':
         return <LogsView />;
+      case 'site':
+        return <SiteBuilderView />;
       default:
         return <DashboardView />;
     }
