@@ -159,15 +159,15 @@ export const DEFAULT_SITE_META: SiteMeta = {
 
 export function createDefaultSections(): SiteSection[] {
   return [
-    { id: 'hero-1', type: 'hero', enabled: true, order: 0, config: { title: 'Hello World!', subtitle: 'Digital Artist & Illustrator', ctaText: 'View Gallery', ctaLink: '#gallery', bgImage: '', overlayOpacity: 0.6 } as HeroConfig },
-    { id: 'gallery-1', type: 'gallery', enabled: true, order: 1, config: { columns: 3, showTitles: true, showTags: true, filterByCategory: false, categories: [], maxItems: 12 } as GalleryConfig },
-    { id: 'about-1', type: 'about', enabled: true, order: 2, config: { name: 'Artist', bio: 'Digital artist specializing in character illustration and concept art.', avatar: '', showSocialLinks: true } as AboutConfig },
-    { id: 'pricing-1', type: 'pricing', enabled: true, order: 3, config: { title: 'Commission Prices', showExtras: true, currency: 'both' } as PricingConfig },
-    { id: 'queue-1', type: 'queue', enabled: true, order: 4, config: { title: 'Commission Queue', showProgress: true, showClientNames: false, maxItems: 10 } as QueueConfig },
-    { id: 'tos-1', type: 'tos', enabled: true, order: 5, config: { title: 'Terms of Service', template: 'standard', customText: '' } as TosConfig },
-    { id: 'contact-1', type: 'contact', enabled: true, order: 6, config: { title: 'Get in Touch', email: '', discord: '', whatsapp: '', formService: 'mailto', formspreeId: '' } as ContactConfig },
-    { id: 'social-1', type: 'social', enabled: true, order: 7, config: { title: 'Follow Me', links: [], style: 'icons' } as SocialConfig },
-    { id: 'footer-1', type: 'footer', enabled: true, order: 8, config: { text: 'All rights reserved', showYear: true, copyrightName: '' } as FooterConfig },
+    { id: 'hero-1', type: 'hero', enabled: true, order: 0, config: { title: 'Hello World!', subtitle: 'Digital Artist & Illustrator', ctaText: 'View Gallery', ctaLink: '#gallery', bgImage: '', overlayOpacity: 0.6 } as unknown as Record<string, unknown> },
+    { id: 'gallery-1', type: 'gallery', enabled: true, order: 1, config: { columns: 3, showTitles: true, showTags: true, filterByCategory: false, categories: [], maxItems: 12 } as unknown as Record<string, unknown> },
+    { id: 'about-1', type: 'about', enabled: true, order: 2, config: { name: 'Artist', bio: 'Digital artist specializing in character illustration and concept art.', avatar: '', showSocialLinks: true } as unknown as Record<string, unknown> },
+    { id: 'pricing-1', type: 'pricing', enabled: true, order: 3, config: { title: 'Commission Prices', showExtras: true, currency: 'both' } as unknown as Record<string, unknown> },
+    { id: 'queue-1', type: 'queue', enabled: true, order: 4, config: { title: 'Commission Queue', showProgress: true, showClientNames: false, maxItems: 10 } as unknown as Record<string, unknown> },
+    { id: 'tos-1', type: 'tos', enabled: true, order: 5, config: { title: 'Terms of Service', template: 'standard', customText: '' } as unknown as Record<string, unknown> },
+    { id: 'contact-1', type: 'contact', enabled: true, order: 6, config: { title: 'Get in Touch', email: '', discord: '', whatsapp: '', formService: 'mailto', formspreeId: '' } as unknown as Record<string, unknown> },
+    { id: 'social-1', type: 'social', enabled: true, order: 7, config: { title: 'Follow Me', links: [], style: 'icons' } as unknown as Record<string, unknown> },
+    { id: 'footer-1', type: 'footer', enabled: true, order: 8, config: { text: 'All rights reserved', showYear: true, copyrightName: '' } as unknown as Record<string, unknown> },
   ];
 }
 

@@ -36,7 +36,7 @@ function genId(prefix: string) {
   return `${prefix}-${Date.now()}-${++idCounter}`;
 }
 
-export const useSiteStore = create<SiteStore>((set, get) => ({
+export const useSiteStore = create<SiteStore>((set) => ({
   config: createDefaultSiteConfig(),
   isDirty: false,
   isDeploying: false,

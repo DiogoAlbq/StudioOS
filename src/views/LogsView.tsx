@@ -3,9 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { invoke } from '@tauri-apps/api/core';
 import { usePortfolioStore } from '../store/usePortfolioStore';
 import { Button } from '../components/ui/Button';
-import { Badge } from '../components/ui/Badge';
 import { LogEntry, LogStats } from '../types';
-import { Terminal, RefreshCw, Download, Trash2, Search, Filter } from 'lucide-react';
+import { Terminal, RefreshCw, Download, Trash2, Search } from 'lucide-react';
 
 export function LogsView() {
   const { t } = useTranslation();

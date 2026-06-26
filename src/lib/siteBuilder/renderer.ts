@@ -120,7 +120,7 @@ function renderQueue(section: SiteSection, portfolio: PortfolioStore, _settings:
     </section>`;
 }
 
-function renderTos(section: SiteSection, portfolio: PortfolioStore, _settings: SettingsStore): string {
+function renderTos(section: SiteSection, _portfolio: PortfolioStore, _settings: SettingsStore): string {
   const c = section.config as { title: string; template: string; customText: string };
   let lines: string[];
   if (c.template === 'custom' && c.customText) {

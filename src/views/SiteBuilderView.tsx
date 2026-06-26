@@ -6,7 +6,7 @@ import { useSiteStore } from '../store/useSiteStore';
 import { usePortfolioStore } from '../store/usePortfolioStore';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { generateSiteHtml } from '../lib/siteBuilder/renderer';
-import { TEMPLATE_PREVIEWS, SECTION_LABELS, SiteTemplate, SectionType, DEFAULT_SITE_THEME, createDefaultSiteConfig } from '../types/site';
+import { TEMPLATE_PREVIEWS, SECTION_LABELS, SiteTemplate, SectionType, DEFAULT_SITE_THEME } from '../types/site';
 import { cn } from '../lib/utils';
 import { logger } from '../lib/logger';
 import { invoke } from '@tauri-apps/api/core';
@@ -18,13 +18,12 @@ const TEMPLATES: SiteTemplate[] = ['minimal', 'bold', 'artistic', 'neon', 'custo
 const SECTION_TYPES: SectionType[] = ['hero', 'gallery', 'about', 'pricing', 'queue', 'tos', 'contact', 'social', 'footer'];
 
 export function SiteBuilderView() {
-  const { config, isDirty, isDeploying, deployUrl, selectedSectionId, previewDevice, updateTemplate, updateTheme, updateMeta, addSection, removeSection, toggleSection, reorderSections, updateSectionConfig, setSelectedSection, setPreviewDevice, setDeploying, setDeployUrl, loadConfig, resetConfig, markDirty } = useSiteStore();
+  const { config, isDirty, isDeploying, selectedSectionId, previewDevice, updateTemplate, updateTheme, updateMeta, addSection, removeSection, toggleSection, reorderSections, updateSectionConfig, setSelectedSection, setPreviewDevice, setDeploying, setDeployUrl, resetConfig, markDirty } = useSiteStore();
   const portfolioStore = usePortfolioStore();
   const settings = useSettingsStore();
   const [activeTab, setActiveTab] = useState<BuilderTab>('template');
   const [previewHtml, setPreviewHtml] = useState('');
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
-  const [isGenerating, setIsGenerating] = useState(false);
 
   const selectedSection = useMemo(
     () => config.sections.find((s) => s.id === selectedSectionId) ?? null,

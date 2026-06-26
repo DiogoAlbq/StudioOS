@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { usePortfolioStore } from '../store/usePortfolioStore';
-import { Image as ImageIcon, Video, AlertTriangle, LayoutTemplate, Activity, ArrowUpRight, ListTodo, DollarSign, BarChart3, Clock } from 'lucide-react';
+import { Image as ImageIcon, Video, AlertTriangle, LayoutTemplate, Activity, ArrowUpRight, ListTodo, DollarSign, BarChart3 } from 'lucide-react';
 import type { PortfolioItem } from '../types';
 
 export function DashboardView() {

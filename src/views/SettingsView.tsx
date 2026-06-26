@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { UpdateChecker } from '../components/ui/UpdateChecker';
-import { Save, Database, HardDrive, Shield, FileCode2, Clock, ImagePlus, Key, Eye, EyeOff, Activity, CheckCircle2, XCircle, RefreshCw, GitBranch, Loader2, ExternalLink, AlertCircle, Globe, Trash2, FolderOpen } from 'lucide-react';
+import { Save, Database, HardDrive, Shield, FileCode2, Clock, ImagePlus, Key, Eye, EyeOff, Activity, CheckCircle2, XCircle, RefreshCw, GitBranch, Loader2, ExternalLink, AlertCircle, Globe, Trash2 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
-import { Badge } from '../components/ui/Badge';
 import { usePortfolioStore } from '../store/usePortfolioStore';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { save as dialogSave, ask } from '@tauri-apps/plugin-dialog';
@@ -165,7 +164,7 @@ export function SettingsView() {
     setRestoringId(backupId);
     try {
       const state = await invoke<{ artItems: unknown[]; videoItems: unknown[]; nsfwItems: unknown[]; heroBgImages: unknown[]; socialItems: unknown[]; queueItems: unknown[]; systemState: unknown }>('restore_backup_cmd', { backupId });
-      usePortfolioStore.getState().restoreBackup(state);
+      usePortfolioStore.getState().restoreBackup(state as Partial<import('../types').PersistedState>);
       addToast({ type: 'success', message: 'Backup restaurado com sucesso.' });
       loadBackupData();
     } catch (err) {
